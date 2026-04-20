@@ -7,6 +7,8 @@ function QuestionList() {
   const [questions, setQuestions] = useState([]);
   const [answers, setAnswers] = useState({});
   const [score, setScore] = useState(null);
+  const [time, setTime] = useState(60); 
+  const [submitted, setSubmitted] = useState(false);
 
   useEffect(() => {
     console.log("Questions:", questions);
@@ -19,6 +21,16 @@ function QuestionList() {
         console.log("Error fetching questions:", err);
       });
   }, []);
+  useEffect(() => {
+  if (time > 0 && !submitted) {
+    const timer = setTimeout(() => setTime(time - 1), 1000);
+    return () => clearTimeout(timer);
+  }
+
+  if (time === 0 && !submitted) {
+    handleSubmit(); // auto submit
+  }
+}, [time, submitted]);
 
   const handleChange = (qId, option) => {
     setAnswers({ ...answers, [qId]: option });
@@ -28,6 +40,7 @@ function QuestionList() {
     console.log("Sending answers:", answers);
     submitAnswers({ answers }).then((res) => {
       setScore(res.data);
+      setSubmitted(true);
     });
   };
 
@@ -35,7 +48,9 @@ function QuestionList() {
     
     <div className="container">
       <div className="card" style={{ width: "650px", paddingTop: "10px" }}>
-        
+        <h3 style={{ textAlign: "center", color: time <= 10 ? "red" : "black" }}>
+          Time Left: {time}s
+        </h3>
         <h2 style={{ textAlign: "center", marginBottom: "20px" }}>
           Exam Portal
         </h2>
@@ -76,6 +91,7 @@ function QuestionList() {
                     type="radio"
                     name={`question-${q.id}`}
                     value={opt}
+                    disabled={submitted} 
                     onChange={() => handleChange(q.id, opt)}
                     style={{ marginRight: "8px" }}
                   />
